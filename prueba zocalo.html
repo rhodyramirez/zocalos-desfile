@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor Avanzado de Zócalos PRO</title>
+    <!-- Importar Google Fonts y Font Awesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&amp;family=Anton&amp;family=Teko:wght@700&amp;family=Lato&amp;family=Merriweather&amp;family=Oswald:wght@400;700&amp;family=Bebas+Neue&amp;family=Poppins:wght@700&amp;family=Russo+One&amp;family=Exo+2:wght@700&amp;family=Orbitron:wght@700&amp;family=Rajdhani:wght@700&amp;family=Syncopate:wght@700&amp;family=Righteous&amp;family=Staatliches&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+
+    
+
+<style>
+
+        :root {
+            --primary-bg: #2c3e50; 
+            --panel-bg: #34495e; 
+            --text-color: #ecf0f1;
+            --header-color: #ffffff; 
+            --accent-color: #27ae60; 
+            --delete-color: #c0392b;
+            --border-color: #4a627a;
+            --input-bg: #2c3e50;
+            --input-text: #ecf0f1;
+            --accordion-bg: #283747;
+        }
+        
+
+        
+        .panel-content { padding: 25px; }
+        
+        .accordion-header { background-color: var(--accordion-bg); padding: 15px; font-weight: 700; cursor: pointer; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; color: #fdfefe; }
+        .accordion-header::after { content: '\25BC'; font-size: 12px; transition: transform 0.2s; }
+        .accordion-header.active::after { transform: rotate(180deg); }
+        .accordion-content { padding: 20px; border-bottom: 1px solid var(--border-color); display: none; background: #3b5066; }
+        .accordion-header.active + .accordion-content { display: block; }
+        
+        label { display: block; margin-bottom: 5px; font-weight: 700; font-size: 14px; }
+        input[type="text"], input[type="number"], select { 
+            width: 100%; padding: 10px; border: 1px solid var(--border-color);
+            border-radius: 5px; box-sizing: border-box; font-size: 14px; 
+            margin-bottom: 10px; background-color: var(--input-bg); color: var(--input-text);
+        }
+        input[type="range"] { width: 100%; }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        .checkbox-group input[type="checkbox"] { width: auto; margin-bottom: 0; }
+        .button-group { display: flex; gap: 10px; margin-top: 10px; }
+        .button-group button { flex-grow: 1; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: 700; color: white; }
+        #add-new-button { background-color: var(--accent-color); }
+        #delete-button { background-color: var(--delete-color); }
+
+        
+        .zocalo-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 1000px; height: 180px; perspective: 1200px; }
+
+        /* --- ESTILOS DE ZÓCALOS --- */
+        .zocalo-base { width: 100%; height: 100%; display: flex; border-radius: 10px; box-shadow: 0 8px 25px rgba(0,0,0,0.3); color: white; overflow: visible; position: relative; box-sizing: border-box; }
+        .zocalo-section { display: flex; flex-direction: column; justify-content: center; height: 100%; z-index: 2; }
+        
+        .zocalo-ident { flex-shrink: 0; align-items: center; position: relative; z-index: 5; }
+        .zocalo-main { flex-grow: 1; padding: 0 25px; position: relative; }
+        
+        .zocalo-base .ident-element { border: 5px solid var(--secondary-color, white); background-color: var(--secondary-color, white); overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .ident-element img { width: 100%; height: 100%; object-fit: cover; }
+        .ident-shape-circle { border-radius: 50%; }
+        .ident-shape-square { border-radius: 20px; }
+        .zocalo-base .icon i { color: var(--primary-color, #333); }
+        
+        .zocalo-base h2 { margin: 0; line-height: 1.1; text-transform: uppercase; color: var(--secondary-color, white); }
+        .zocalo-base p { margin: 5px 0 0 0; }
+        .zocalo-base .slogan { font-weight: 700; opacity: 0.9; }
+        .zocalo-base .details { font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .zocalo-base .details i { margin-right: 0; width: 16px; text-align: center; color: var(--secondary-color, white); }
+
+        .social-bar { display: flex; position: absolute; z-index: 3; }
+        .social-bar.horizontal { bottom: 15px; right: 20px; flex-direction: row; gap: 15px; }
+        .social-bar.vertical { top: 50%; transform: translateY(-50%); right: 20px; flex-direction: column; gap: 10px; }
+        .social-bar.hide-text span { font-size: 0; }
+        .social-bar.hide-text i { margin-right: 0; }
+        .social-bar span { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; }
+        .social-bar i { font-size: 24px; opacity: 0.9; color: var(--secondary-color, white); }
+        
+        .zocalo-contact-bar { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 8px 20px; box-sizing: border-box; display: flex; justify-content: center; gap: 30px; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; z-index: 3; }
+        .zocalo-negocio .zocalo-ident { transform: translateY(-15px); }
+        .zocalo-negocio .social-bar.horizontal { bottom: 55px; }
+
+        /* --- PLANTILLA POLÍTICO CLÁSICO --- */
+        .politico-classic { align-items:center; padding: 0 20px; }
+        .politico-classic .star-container { width: 150px; height: 100%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background-color: var(--secondary-color, #1a4a8d); position: absolute; right: 0; top: 0; }
+        .politico-classic .color-bar { position: absolute; left:0; top:0; width: 25px; height: 100%; z-index: 1; background-color: var(--secondary-color, #3498db); }
+        .politico-classic .star-container svg, .politico-classic .star-container img { width: 70px; height: 70px; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); object-fit: contain;}
+
+        /* --- PLANTILLA POLÍTICO MODERNO (NUEVO) --- */
+        .politico-moderno { align-items: center; padding: 0; }
+        .politico-moderno .zocalo-main { padding-left: 40px; }
+        .politico-moderno .zocalo-ident { position: absolute; right: 20px; top: -30px; z-index: 6;}
+        .politico-moderno .ident-element { border-width: 8px; }
+        .politico-moderno .star-container { width: 80px; height: 80px; position: absolute; left: 20px; bottom: -25px; z-index: 6; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--secondary-color); }
+        .politico-moderno .star-container svg, .politico-moderno .star-container img { width: 45px; height: 45px; filter: none; object-fit: contain;}
+        .politico-moderno .color-bar { position: absolute; bottom: 0; left: 0; width: 100%; height: 20px; background: var(--secondary-color); border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;}
+        .politico-moderno .social-bar.vertical { right: -50px; }
+        
+        /* Estilos Comunes de Contenedor de Estrella */
+        .star-container.no-bg { background-color: transparent !important; }
+        .star-container.star-style-semicircle { clip-path: circle(75% at 0% 50%); border-radius:0; }
+        .star-container.star-style-diagonal { clip-path: polygon(0 0, 100% 0, 0 100%, 0 100%); border-radius:0; }
+
+        /* --- FONDOS DINÁMICOS --- */
+        .bg-plexus canvas, .bg-particles canvas, .bg-star-field canvas, .bg-floating-shapes canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+        @keyframes aurora { 0% { background-position: 0% 50% } 100% { background-position: 100% 50% } }
+        .bg-aurora { background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: aurora 15s ease-in-out infinite alternate; }
+        @keyframes tech-glow { 0% { box-shadow: inset 0 0 80px -20px var(--secondary-color-trans); } 100% { box-shadow: inset 0 0 80px 20px var(--secondary-color-trans); } }
+        .bg-tech-glow { animation: tech-glow 3s alternate-reverse infinite ease-in-out; }
+        @keyframes neon-waves { 0% { background-position: 0% 0% } 100% { background-position: -200% 0% } }
+        .bg-neon-waves { background: radial-gradient(ellipse at 50% 150%, var(--secondary-color-trans, #ff00ff22) 0%, transparent 50%), repeating-linear-gradient(10deg, var(--primary-color) 0px, var(--primary-color) 19px, var(--secondary-color-trans, #ff00ff22) 20px); animation: neon-waves 5s linear infinite; }
+        @keyframes gradient-shift { 0%, 100% { background-position: 0% 50% } 50% { background-position: 100% 50% } }
+        .bg-gradient-shift { background: linear-gradient(-45deg, var(--primary-color), var(--secondary-color), var(--primary-color)); background-size: 200% 200%; animation: gradient-shift 10s ease infinite; }
+        @keyframes moving-stripes { 0% { background-position: 0 0 } 100% { background-position: 100px 0 } }
+        .bg-moving-stripes { background: repeating-linear-gradient(-45deg, var(--secondary-color-trans) 0, var(--secondary-color-trans) 10px, transparent 10px, transparent 20px); background-size: 200% 200%; animation: moving-stripes 5s linear infinite; }
+        @keyframes pulsing-dots { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.6; } }
+        .bg-pulsing-dots { background-image: radial-gradient(var(--secondary-color-trans) 1px, transparent 1px); background-size: 20px 20px; animation: pulsing-dots 3s ease-in-out infinite; }
+        @keyframes binary-fall { to { background-position: 0 180px; } }
+        .bg-binary-fall { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 100 100'%3E%3Ctext x='50' y='50' font-size='20' fill-opacity='0.2' fill='%23FFF' text-anchor='middle' font-family='monospace'%3E01%3C/text%3E%3C/svg%3E"); animation: binary-fall 1s linear infinite; }
+        @keyframes liquid-flow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .bg-liquid-flow:before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(var(--secondary-color), var(--primary-color), var(--secondary-color)); animation: liquid-flow 20s linear infinite; }
+        @keyframes scanlines { from { background-position: 0 0 } to { background-position: 0 100% } }
+        .bg-scanlines { background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.3) 50%); background-size: 100% 4px; animation: scanlines 5s linear infinite; }
+        @keyframes glitch-anim { 0% { clip: rect(42px, 9999px, 44px, 0); } 10% { clip: rect(10px, 9999px, 85px, 0); } 20% { clip: rect(90px, 9999px, 2px, 0); } 30% { clip: rect(25px, 9999px, 60px, 0); } 40% { clip: rect(40px, 9999px, 62px, 0); } 50% { clip: rect(70px, 9999px, 100px, 0); } 60% { clip: rect(10px, 9999px, 90px, 0); } 70% { clip: rect(80px, 9999px, 40px, 0); } 80% { clip: rect(50px, 9999px, 52px, 0); } 90% { clip: rect(23px, 9999px, 48px, 0); } 100% { clip: rect(1px, 9999px, 79px, 0); } }
+        .bg-glitch::before, .bg-glitch::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height:100%; padding: inherit; box-sizing: border-box; background: var(--primary-color); clip: rect(0, 0, 0, 0); display: flex; align-items: center; }
+        .bg-glitch[data-text]::before { content: attr(data-text); left: 2px; text-shadow: -1px 0 var(--secondary-color); animation: glitch-anim 2s infinite linear alternate-reverse; }
+        .bg-glitch[data-text]::after { content: attr(data-text); left: -2px; text-shadow: -1px 0 var(--accent-color); animation: glitch-anim 3s infinite linear alternate-reverse; }
+        
+        
+        #modal-box { background: var(--panel-bg); padding: 30px; border-radius: 10px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #modal-box p { margin: 0 0 20px 0; font-size: 18px; }
+
+    
+body, html { margin:0; padding:0; background:transparent; overflow:hidden; font-family: 'Roboto Condensed', sans-serif; }
+/* Animation styles */
+.zocalo-item { position: absolute; width: 100%; height: 100%; opacity: 0; visibility: hidden; }
+.zocalo-item.active { opacity: 1; visibility: visible; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideDown { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(50px); } }
+.anim-fade-in { animation: fadeIn 0.6s forwards; }
+.anim-fade-out { animation: fadeOut 0.6s forwards; }
+.anim-slide-in { animation: slideUp 0.6s forwards; }
+.anim-slide-out { animation: slideDown 0.6s forwards; }
+
+</style>
+</head>
+<body>
+<div class="zocalo-container">
+<div class="zocalo-item"><div class="zocalo-base zocalo-politico politico-classic default" style="background-color: #003366; --primary-color: #003366; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="color-bar"></div><div class="zocalo-section zocalo-ident" style="transform: translateX(21%);"><div class="ident-element ident-shape-circle" style="width: 153px; height: 153px;"><img src="https://i.ibb.co/pjRYtPvx/unnamed-14-removebg-preview.png" style="width: 156%; height: 156%; object-fit: cover; position: absolute; top: 86%; left: 50%; transform: translate(-50%, -50%);" alt="Foto"></div></div><div class="zocalo-main" style="text-align: center; padding-top: 4px; padding-bottom: -4px" ><h2 style="font-size: 58px; font-family: 'Poppins', sans-serif;">REINALDO BENITEZ</h2><p class="slogan" style="font-size: 31px; font-family: 'Poppins', sans-serif;">CONCEJAL MUNICIPAL-VILLETA</p></div><div class="star-container no-bg"><svg viewBox="0 0 51 48"><path fill="white" d="m25,1 6,17h18l-14,11 5,17-15-10-15,10 5-17-14-11h18z"/></svg></div><div class="social-bar horizontal hide-text"><span><i class="fab fa-whatsapp"></i>  </span><span><i class="fab fa-facebook"></i>  </span><span><i class="fab fa-instagram"></i>  </span></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-negocio bg-plexus" style="background-color: #1a1a1a; --primary-color: #1a1a1a; --secondary-color: #e74c3c; --secondary-color-trans: #e74c3c33;"><div class="zocalo-section zocalo-ident" style="transform: translateX(5%);"><div class="ident-element ident-shape-square" style="width: 158px; height: 158px;"><img src="https://i.ibb.co/Xr5czbCL/g9.png" alt="Logo de Negocio" style="object-fit: contain; padding: 5px;"></div></div><div class="zocalo-main" style="text-align: center; padding-top: 19px; padding-bottom: -19px" ><h2 style="font-size: 69px; font-family: 'Russo One', sans-serif;">HO Automores</h2><p class="slogan" style="font-size: 24px; font-family: 'Russo One', sans-serif;">Compra- venta consignación - 0981 102 654</p></div><div class="zocalo-contact-bar"><p class="details"><i class="fa-solid fa-location-dot"></i> Ñemby, Py</p></div><div class="social-bar horizontal "></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-politico politico-moderno default" style="background-color: #941e1e; --primary-color: #941e1e; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="zocalo-main" style="text-align: left; padding-top: -19px; padding-bottom: 19px" ><h2 style="font-size: 56px; font-family: 'Exo 2', sans-serif;">Concejal Julio Gamarra</h2><p class="slogan" style="font-size: 24px; font-family: 'Exo 2', sans-serif;"></p></div><div class="zocalo-section zocalo-ident" style="transform: translateX(10%);"><div class="ident-element ident-shape-square" style="width: 175px; height: 175px;"><img src="https://i.ibb.co/TMzy1wSp/images-removebg-preview.png" style="width: 114%; height: 114%; object-fit: cover; position: absolute; top: 50%; left: 55%; transform: translate(-50%, -50%);" alt="Foto"></div></div><div class="color-bar"></div><div class="star-container "><img src="https://i.ibb.co/m5pFrJfQ/klipartz-com.png" alt="Icono personalizado"></div><div class="social-bar horizontal "></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-politico politico-classic default" style="background-color: #941e1e; --primary-color: #941e1e; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="color-bar"></div><div class="zocalo-section zocalo-ident" style="transform: translateX(44%);"><div class="ident-element ident-shape-circle" style="width: 149px; height: 149px;"><img src="https://i.ibb.co/pjF07Zrh/unnamed-17-removebg-preview.png" style="width: 148%; height: 148%; object-fit: cover; position: absolute; top: 85%; left: 53%; transform: translate(-50%, -50%);" alt="Foto"></div></div><div class="zocalo-main" style="text-align: center; padding-top: -1px; padding-bottom: 1px" ><h2 style="font-size: 66px; font-family: 'Exo 2', sans-serif;">Concejal Carlos "Tuky" Chavez</h2><p class="slogan" style="font-size: 24px; font-family: 'Exo 2', sans-serif;"></p></div><div class="star-container no-bg"><svg viewBox="0 0 51 48"><path fill="white" d="m25,1 6,17h18l-14,11 5,17-15-10-15,10 5-17-14-11h18z"/></svg></div><div class="social-bar horizontal "><span><i class="fab fa-whatsapp"></i>  </span><span><i class="fab fa-facebook"></i>  </span><span><i class="fab fa-instagram"></i>  </span></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-politico politico-moderno default" style="background-color: #003366; --primary-color: #003366; --secondary-color: #e6e6fa; --secondary-color-trans: #e6e6fa33;"><div class="zocalo-main" style="text-align: left; padding-top: -29px; padding-bottom: 29px" ><h2 style="font-size: 51px; font-family: 'Syncopate', sans-serif;">Concejal Eduardo "Choto" noguera</h2><p class="slogan" style="font-size: 24px; font-family: 'Syncopate', sans-serif;"></p></div><div class="zocalo-section zocalo-ident" style="transform: translateX(10%);"><div class="ident-element ident-shape-square" style="width: 160px; height: 160px;"><img src="https://i.ibb.co/Q7kgCgQw/unnamed-16.jpg" style="width: 182%; height: 182%; object-fit: cover; position: absolute; top: 89%; left: 21%; transform: translate(-50%, -50%);" alt="Foto"></div></div><div class="color-bar"></div><div class="star-container "><img src="https://i.ibb.co/qYQgbydY/51kf-Mhd2-T7-L-AC-UF894-1000-QL80.jpg" alt="Icono personalizado"></div><div class="social-bar horizontal "></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-politico politico-moderno bg-scanlines" style="background-color: #1a1a1a; --primary-color: #1a1a1a; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="zocalo-main" style="text-align: center; padding-top: -24px; padding-bottom: 24px" ><h2 style="font-size: 77px; font-family: 'Exo 2', sans-serif;">Alberto Baez</h2><p class="slogan" style="font-size: 40px; font-family: 'Exo 2', sans-serif;">Director del SNPP Filial Villeta</p></div><div class="zocalo-section zocalo-ident" style="transform: translateX(0%);"><div class="ident-element ident-shape-square" style="width: 154px; height: 154px;"><img src="https://i.ibb.co/Xk629Q9b/unnamed-5-removebg-preview.png" style="width: 287%; height: 287%; object-fit: cover; position: absolute; top: 88%; left: 66%; transform: translate(-50%, -50%);" alt="Foto"></div></div><div class="color-bar"></div><div class="star-container "><img src="https://i.ibb.co/hxdcs6hT/descargar.png" alt="Icono personalizado"></div><div class="social-bar horizontal "></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-negocio bg-scanlines" style="background-color: #941e1e; --primary-color: #941e1e; --secondary-color: #e6e6fa; --secondary-color-trans: #e6e6fa33;"><div class="zocalo-section zocalo-ident" style="transform: translateX(5%);"><div class="ident-element ident-shape-circle" style="width: 163px; height: 163px;"><img src="https://i.ibb.co/twT5DYN5/rect9.png" alt="Logo de Negocio" style="object-fit: contain; padding: 5px;"></div></div><div class="zocalo-main" style="text-align: center; padding-top: 15px; padding-bottom: -15px" ><h2 style="font-size: 62px; font-family: 'Teko', sans-serif;">Carniceria Toro Blanco </h2><p class="slogan" style="font-size: 40px; font-family: 'Teko', sans-serif;">De Juan Gonzalez - 0981 999015</p></div><div class="zocalo-contact-bar"><p class="details"><i class="fa-solid fa-phone"></i> Cel.: 0981 999015</p><p class="details"><i class="fa-solid fa-location-dot"></i> Mercado N°4 Av. Pettirossi entre Rca. Francesa y Padre Levera</p></div><div class="social-bar horizontal "><span><i class="fab fa-whatsapp"></i>  </span><span><i class="fab fa-facebook"></i>  </span><span><i class="fab fa-instagram"></i>  </span></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-negocio default" style="background-color: #003366; --primary-color: #003366; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="zocalo-section zocalo-ident" style="transform: translateX(5%);"><div class="ident-element ident-shape-square" style="width: 200px; height: 200px;"><img src="https://i.ibb.co/s9hGVDbv/g20.png" alt="Logo de Negocio" style="object-fit: contain; padding: 5px;"></div></div><div class="zocalo-main" style="text-align: center; padding-top: 33px; padding-bottom: -33px" ><h2 style="font-size: 35px; font-family: 'Poppins', sans-serif;">Chispita Electricidad del Automovil</h2><p class="slogan" style="font-size: 24px; font-family: 'Poppins', sans-serif;">Reparacion de Arranque y Alternador, Instalacion Completa, Control preventivo y Mantenimiento</p></div><div class="social-bar horizontal "></div></div></div>
+</div>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        const tiempoEnPantalla = 8000;
+                        const tiempoTransicion = 600;
+                        const container = document.querySelector('.zocalo-container');
+                        let zocalos = Array.from(container.children);
+                        let currentIndex = 0;
+                        const animaciones = [ { in: 'anim-fade-in', out: 'anim-fade-out' }, { in: 'anim-slide-in', out: 'anim-slide-out' }];
+
+                        function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+                        function showNextZocalo() {
+                            if (zocalos.length === 0) return;
+                            if (currentIndex === 0) {
+                                zocalos = shuffle(Array.from(container.children));
+                                zocalos.forEach(el => container.appendChild(el));
+                            }
+                            
+                            const current = zocalos[currentIndex];
+                            const prev = zocalos[currentIndex === 0 ? zocalos.length - 1 : currentIndex - 1];
+                            const anim = animaciones[Math.floor(Math.random() * animaciones.length)];
+                            
+                            if (prev && prev !== current) { prev.className = 'zocalo-item ' + anim.out; }
+                            
+                            setTimeout(() => { 
+                                if(current) current.className = 'zocalo-item active ' + anim.in; 
+                            }, 300);
+
+                            currentIndex = (currentIndex + 1) % zocalos.length;
+                            setTimeout(showNextZocalo, tiempoEnPantalla + tiempoTransicion);
+                        }
+                        if(zocalos.length > 0) showNextZocalo();
+                    });
+                </script>
+            
+</body>
+</html>
