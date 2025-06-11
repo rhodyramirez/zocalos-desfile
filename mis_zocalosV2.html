@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor Avanzado de Zócalos PRO</title>
+    <!-- Importar Google Fonts y Font Awesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Bebas+Neue&amp;family=Exo+2:ital,wght@0,700;1,700&amp;family=Lato:ital,wght@0,400;0,700;1,400;1,700&amp;family=Lobster&amp;family=Oswald:wght@400;700&amp;family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&amp;family=Poppins:ital,wght@0,400;0,700;1,400;1,700&amp;family=Rajdhani:wght@400;700&amp;family=Roboto+Condensed:ital,wght@0,400;0,700;1,400;1,700&amp;family=Russo+One&amp;family=Syncopate:wght@400;700&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+
+    
+
+<style>
+
+        :root {
+            --primary-bg: #2c3e50; 
+            --panel-bg: #34495e; 
+            --text-color: #ecf0f1;
+            --header-color: #ffffff; 
+            --accent-color: #27ae60; 
+            --delete-color: #c0392b;
+            --import-color: #3498db;
+            --border-color: #4a627a;
+            --input-bg: #2c3e50;
+            --input-text: #ecf0f1;
+            --accordion-bg: #283747;
+        }
+        
+
+        
+        .panel-content { padding: 25px; }
+        
+        .accordion-header { background-color: var(--accordion-bg); padding: 15px; font-weight: 700; cursor: pointer; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; color: #fdfefe; }
+        .accordion-header::after { content: '\25BC'; font-size: 12px; transition: transform 0.2s; }
+        .accordion-header.active::after { transform: rotate(180deg); }
+        .accordion-content { padding: 20px; border-bottom: 1px solid var(--border-color); display: none; background: #3b5066; }
+        .accordion-header.active + .accordion-content { display: block; }
+        
+        label { display: block; margin-bottom: 5px; font-weight: 700; font-size: 14px; }
+        input[type="text"], input[type="number"], select { 
+            width: 100%; padding: 10px; border: 1px solid var(--border-color);
+            border-radius: 5px; box-sizing: border-box; font-size: 14px; 
+            margin-bottom: 10px; background-color: var(--input-bg); color: var(--input-text);
+        }
+        .control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        input[type="range"] { width: 100%; }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        .checkbox-group input[type="checkbox"] { width: auto; margin-bottom: 0; }
+        .button-group { display: flex; gap: 10px; margin-top: 10px; }
+        .button-group button, .button-group label { text-align: center; flex-grow: 1; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: 700; color: white; display: inline-block; font-size: 14px;}
+        #add-new-button { background-color: var(--accent-color); }
+        #delete-button { background-color: var(--delete-color); }
+        #import-button-label { background-color: var(--import-color); }
+        #export-button { background-color: var(--accent-color); }
+
+        
+        .zocalo-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 1000px; height: 180px; perspective: 1200px; }
+
+        /* --- ESTILOS DE ZÓCALOS --- */
+        .zocalo-base { width: 100%; height: 100%; display: flex; border-radius: 10px; box-shadow: 0 8px 25px rgba(0,0,0,0.3); color: white; overflow: visible; position: relative; box-sizing: border-box; }
+        .zocalo-section { display: flex; flex-direction: column; justify-content: center; height: 100%; z-index: 2; }
+        
+        .zocalo-ident { flex-shrink: 0; align-items: center; position: relative; z-index: 5; }
+        .zocalo-main { flex-grow: 1; padding: 0 25px; position: relative; }
+        
+        .zocalo-base .ident-element { border: 5px solid var(--secondary-color, white); background-color: var(--secondary-color, white); overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .ident-element img { width: 100%; height: 100%; object-fit: cover; }
+        .ident-shape-circle { border-radius: 50%; }
+        .ident-shape-square { border-radius: 20px; }
+        .zocalo-base .icon i { color: var(--primary-color, #333); }
+        
+        .zocalo-base h2 { margin: 0; line-height: 1.1; text-transform: uppercase; color: var(--secondary-color, white); }
+        .zocalo-base p { margin: 5px 0 0 0; }
+        .zocalo-base .slogan { font-weight: 700; opacity: 0.9; }
+        .zocalo-base .details { font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .zocalo-base .details i { margin-right: 0; width: 16px; text-align: center; color: var(--secondary-color, white); }
+
+        .social-bar { display: flex; position: absolute; z-index: 3; }
+        .social-bar.horizontal { bottom: 15px; right: 20px; flex-direction: row; gap: 15px; }
+        .social-bar.vertical { top: 50%; transform: translateY(-50%); right: 20px; flex-direction: column; gap: 10px; }
+        .social-bar.hide-text span { font-size: 0; }
+        .social-bar.hide-text i { margin-right: 0; }
+        .social-bar span { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; }
+        .social-bar i { font-size: 24px; opacity: 0.9; color: var(--secondary-color, white); }
+        
+        .zocalo-contact-bar { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 8px 20px; box-sizing: border-box; display: flex; justify-content: center; gap: 30px; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; z-index: 3; }
+        .zocalo-negocio .zocalo-ident { transform: translateY(-15px); }
+        .zocalo-negocio .social-bar.horizontal { bottom: 55px; }
+
+        /* --- PLANTILLA POLÍTICO CLÁSICO --- */
+        .politico-classic { align-items:center; padding: 0 20px; }
+        .politico-classic .star-container { width: 150px; height: 100%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background-color: var(--secondary-color, #1a4a8d); position: absolute; right: 0; top: 0; }
+        .politico-classic .color-bar { position: absolute; left:0; top:0; width: 25px; height: 100%; z-index: 1; background-color: var(--secondary-color, #3498db); }
+        .politico-classic .star-container svg, .politico-classic .star-container img { width: 70px; height: 70px; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); object-fit: contain;}
+
+        /* --- PLANTILLA POLÍTICO MODERNO (NUEVO) --- */
+        .politico-moderno { align-items: center; padding: 0; }
+        .politico-moderno .zocalo-main { padding-left: 40px; }
+        .politico-moderno .zocalo-ident { position: absolute; right: 20px; top: -30px; z-index: 6;}
+        .politico-moderno .ident-element { border-width: 8px; }
+        .politico-moderno .star-container { width: 80px; height: 80px; position: absolute; left: 20px; bottom: -25px; z-index: 6; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--secondary-color); }
+        .politico-moderno .star-container svg, .politico-moderno .star-container img { width: 45px; height: 45px; filter: none; object-fit: contain;}
+        .politico-moderno .color-bar { position: absolute; bottom: 0; left: 0; width: 100%; height: 20px; background: var(--secondary-color); border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;}
+        .politico-moderno .social-bar.vertical { right: -50px; }
+        
+        /* Estilos Comunes de Contenedor de Estrella */
+        .star-container.no-bg { background-color: transparent !important; }
+        .star-container.star-style-semicircle { clip-path: circle(75% at 0% 50%); border-radius:0; }
+        .star-container.star-style-diagonal { clip-path: polygon(0 0, 100% 0, 0 100%, 0 100%); border-radius:0; }
+
+        /* --- FONDOS DINÁMICOS --- */
+        .bg-plexus canvas, .bg-particles canvas, .bg-star-field canvas, .bg-floating-shapes canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+        @keyframes aurora { 0% { background-position: 0% 50% } 100% { background-position: 100% 50% } }
+        .bg-aurora { background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: aurora 15s ease-in-out infinite alternate; }
+        @keyframes tech-glow { 0% { box-shadow: inset 0 0 80px -20px var(--secondary-color-trans); } 100% { box-shadow: inset 0 0 80px 20px var(--secondary-color-trans); } }
+        .bg-tech-glow { animation: tech-glow 3s alternate-reverse infinite ease-in-out; }
+        @keyframes neon-waves { 0% { background-position: 0% 0% } 100% { background-position: -200% 0% } }
+        .bg-neon-waves { background: radial-gradient(ellipse at 50% 150%, var(--secondary-color-trans, #ff00ff22) 0%, transparent 50%), repeating-linear-gradient(10deg, var(--primary-color) 0px, var(--primary-color) 19px, var(--secondary-color-trans, #ff00ff22) 20px); animation: neon-waves 5s linear infinite; }
+        @keyframes gradient-shift { 0%, 100% { background-position: 0% 50% } 50% { background-position: 100% 50% } }
+        .bg-gradient-shift { background: linear-gradient(-45deg, var(--primary-color), var(--secondary-color), var(--primary-color)); background-size: 200% 200%; animation: gradient-shift 10s ease infinite; }
+        @keyframes moving-stripes { 0% { background-position: 0 0 } 100% { background-position: 100px 0 } }
+        .bg-moving-stripes { background: repeating-linear-gradient(-45deg, var(--secondary-color-trans) 0, var(--secondary-color-trans) 10px, transparent 10px, transparent 20px); background-size: 200% 200%; animation: moving-stripes 5s linear infinite; }
+        @keyframes pulsing-dots { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.6; } }
+        .bg-pulsing-dots { background-image: radial-gradient(var(--secondary-color-trans) 1px, transparent 1px); background-size: 20px 20px; animation: pulsing-dots 3s ease-in-out infinite; }
+        @keyframes binary-fall { to { background-position: 0 180px; } }
+        .bg-binary-fall { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 100 100'%3E%3Ctext x='50' y='50' font-size='20' fill-opacity='0.2' fill='%23FFF' text-anchor='middle' font-family='monospace'%3E01%3C/text%3E%3C/svg%3E"); animation: binary-fall 1s linear infinite; }
+        @keyframes liquid-flow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .bg-liquid-flow:before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(var(--secondary-color), var(--primary-color), var(--secondary-color)); animation: liquid-flow 20s linear infinite; }
+        @keyframes scanlines { from { background-position: 0 0 } to { background-position: 0 100% } }
+        .bg-scanlines { background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.3) 50%); background-size: 100% 4px; animation: scanlines 5s linear infinite; }
+        @keyframes glitch-anim { 0% { clip: rect(42px, 9999px, 44px, 0); } 10% { clip: rect(10px, 9999px, 85px, 0); } 20% { clip: rect(90px, 9999px, 2px, 0); } 30% { clip: rect(25px, 9999px, 60px, 0); } 40% { clip: rect(40px, 9999px, 62px, 0); } 50% { clip: rect(70px, 9999px, 100px, 0); } 60% { clip: rect(10px, 9999px, 90px, 0); } 70% { clip: rect(80px, 9999px, 40px, 0); } 80% { clip: rect(50px, 9999px, 52px, 0); } 90% { clip: rect(23px, 9999px, 48px, 0); } 100% { clip: rect(1px, 9999px, 79px, 0); } }
+        .bg-glitch::before, .bg-glitch::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height:100%; padding: inherit; box-sizing: border-box; background: var(--primary-color); clip: rect(0, 0, 0, 0); display: flex; align-items: center; }
+        .bg-glitch[data-text]::before { content: attr(data-text); left: 2px; text-shadow: -1px 0 var(--secondary-color); animation: glitch-anim 2s infinite linear alternate-reverse; }
+        .bg-glitch[data-text]::after { content: attr(data-text); left: -2px; text-shadow: -1px 0 var(--accent-color); animation: glitch-anim 3s infinite linear alternate-reverse; }
+        
+        
+        #modal-box { background: var(--panel-bg); padding: 30px; border-radius: 10px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #modal-box p { margin: 0 0 20px 0; font-size: 18px; }
+
+    
+body, html { margin:0; padding:0; background:transparent; overflow:hidden; font-family: 'Roboto Condensed', sans-serif; }
+/* Animation styles */
+.zocalo-item { position: absolute; width: 100%; height: 100%; opacity: 0; visibility: hidden; }
+.zocalo-item.active { opacity: 1; visibility: visible; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideDown { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(50px); } }
+.anim-fade-in { animation: fadeIn 0.6s forwards; }
+.anim-fade-out { animation: fadeOut 0.6s forwards; }
+.anim-slide-in { animation: slideUp 0.6s forwards; }
+.anim-slide-out { animation: slideDown 0.6s forwards; }
+
+</style>
+</head>
+<body>
+<div class="zocalo-container">
+<div class="zocalo-item"><div class="zocalo-base zocalo-politico politico-classic default" style="background-color: #003366; --primary-color: #003366; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="color-bar"></div><div class="zocalo-section zocalo-ident" style="transform: translateX(21%);"><div class="ident-element ident-shape-circle" style="width: 153px; height: 153px;"><img src="https://i.ibb.co/pjRYtPvx/unnamed-14-removebg-preview.png" style="width: 156%; height: 156%; object-fit: cover; position: absolute; top: 86%; left: 50%; transform: translate(-50%, -50%);" alt="Foto"></div></div><div class="zocalo-main" style="text-align: center; padding-top: 4px; padding-bottom: -4px" ><h2 style="font-size: 58px; font-family: 'Poppins', sans-serif; font-weight: undefined; font-style: undefined;">REINALDO BENITEZ</h2><p class="slogan" style="font-size: 31px; font-family: 'Poppins', sans-serif; font-weight: undefined; font-style: undefined;">CONCEJAL MUNICIPAL-VILLETA</p></div><div class="star-container no-bg"><svg viewBox="0 0 51 48"><path fill="white" d="m25,1 6,17h18l-14,11 5,17-15-10-15,10 5-17-14-11h18z"/></svg></div><div class="social-bar horizontal hide-text"></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-negocio bg-plexus" style="background-color: #1a1a1a; --primary-color: #1a1a1a; --secondary-color: #e74c3c; --secondary-color-trans: #e74c3c33;"><div class="zocalo-section zocalo-ident" style="transform: translateX(5%);"><div class="ident-element ident-shape-square" style="width: 158px; height: 158px;"><img src="https://i.ibb.co/Xr5czbCL/g9.png" alt="Logo de Negocio" style="object-fit: contain; padding: 5px;"></div></div><div class="zocalo-main" style="text-align: center; padding-top: 19px; padding-bottom: -19px" ><h2 style="font-size: 69px; font-family: 'Russo One', sans-serif; font-weight: undefined; font-style: undefined;">HO Automotores</h2><p class="slogan" style="font-size: 24px; font-family: 'Russo One', sans-serif; font-weight: undefined; font-style: undefined;">Compra- venta consignación - 0981 102 654</p></div><div class="zocalo-contact-bar"><p class="details"><i class="fa-solid fa-location-dot"></i> Ñemby, Py</p></div><div class="social-bar horizontal "></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-politico politico-moderno default" style="background-color: #941e1e; --primary-color: #941e1e; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="zocalo-main" style="text-align: left; padding-top: -19px; padding-bottom: 19px" ><h2 style="font-size: 56px; font-family: 'Exo 2', sans-serif; font-weight: undefined; font-style: undefined;">Concejal Julio Gamarra</h2><p class="slogan" style="font-size: 24px; font-family: 'Exo 2', sans-serif; font-weight: undefined; font-style: undefined;"></p></div><div class="zocalo-section zocalo-ident" style="transform: translateX(10%);"><div class="ident-element ident-shape-square" style="width: 175px; height: 175px;"><img src="https://i.ibb.co/TMzy1wSp/images-removebg-preview.png" style="width: 114%; height: 114%; object-fit: cover; position: absolute; top: 50%; left: 55%; transform: translate(-50%, -50%);" alt="Foto"></div></div><div class="color-bar"></div><div class="star-container "><img src="https://i.ibb.co/m5pFrJfQ/klipartz-com.png" alt="Icono personalizado"></div><div class="social-bar horizontal "></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-politico politico-classic default" style="background-color: #941e1e; --primary-color: #941e1e; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="color-bar"></div><div class="zocalo-section zocalo-ident" style="transform: translateX(44%);"><div class="ident-element ident-shape-circle" style="width: 149px; height: 149px;"><img src="https://i.ibb.co/pjF07Zrh/unnamed-17-removebg-preview.png" style="width: 148%; height: 148%; object-fit: cover; position: absolute; top: 85%; left: 53%; transform: translate(-50%, -50%);" alt="Foto"></div></div><div class="zocalo-main" style="text-align: center; padding-top: -1px; padding-bottom: 1px" ><h2 style="font-size: 66px; font-family: 'Exo 2', sans-serif; font-weight: undefined; font-style: undefined;">Concejal Carlos "Tuky" Chavez</h2><p class="slogan" style="font-size: 24px; font-family: 'Exo 2', sans-serif; font-weight: undefined; font-style: undefined;"></p></div><div class="star-container no-bg"><svg viewBox="0 0 51 48"><path fill="white" d="m25,1 6,17h18l-14,11 5,17-15-10-15,10 5-17-14-11h18z"/></svg></div><div class="social-bar horizontal "></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-politico politico-moderno default" style="background-color: #003366; --primary-color: #003366; --secondary-color: #e6e6fa; --secondary-color-trans: #e6e6fa33;"><div class="zocalo-main" style="text-align: left; padding-top: -29px; padding-bottom: 29px" ><h2 style="font-size: 51px; font-family: 'Syncopate', sans-serif; font-weight: undefined; font-style: undefined;">Concejal Eduardo "Choto" noguera</h2><p class="slogan" style="font-size: 24px; font-family: 'Syncopate', sans-serif; font-weight: undefined; font-style: undefined;"></p></div><div class="zocalo-section zocalo-ident" style="transform: translateX(10%);"><div class="ident-element ident-shape-square" style="width: 160px; height: 160px;"><img src="https://i.ibb.co/Q7kgCgQw/unnamed-16.jpg" style="width: 182%; height: 182%; object-fit: cover; position: absolute; top: 89%; left: 21%; transform: translate(-50%, -50%);" alt="Foto"></div></div><div class="color-bar"></div><div class="star-container "><img src="https://i.ibb.co/qYQgbydY/51kf-Mhd2-T7-L-AC-UF894-1000-QL80.jpg" alt="Icono personalizado"></div><div class="social-bar horizontal "></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-politico politico-moderno bg-scanlines" style="background-color: #1a1a1a; --primary-color: #1a1a1a; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="zocalo-main" style="text-align: center; padding-top: -24px; padding-bottom: 24px" ><h2 style="font-size: 77px; font-family: 'Exo 2', sans-serif; font-weight: undefined; font-style: undefined;">Alberto Baez</h2><p class="slogan" style="font-size: 40px; font-family: 'Exo 2', sans-serif; font-weight: undefined; font-style: undefined;">Director del SNPP Filial Villeta</p></div><div class="zocalo-section zocalo-ident" style="transform: translateX(0%);"><div class="ident-element ident-shape-square" style="width: 154px; height: 154px;"><img src="https://i.ibb.co/Xk629Q9b/unnamed-5-removebg-preview.png" style="width: 287%; height: 287%; object-fit: cover; position: absolute; top: 88%; left: 66%; transform: translate(-50%, -50%);" alt="Foto"></div></div><div class="color-bar"></div><div class="star-container "><img src="https://i.ibb.co/hxdcs6hT/descargar.png" alt="Icono personalizado"></div><div class="social-bar horizontal "></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-negocio bg-scanlines" style="background-color: #941e1e; --primary-color: #941e1e; --secondary-color: #e6e6fa; --secondary-color-trans: #e6e6fa33;"><div class="zocalo-section zocalo-ident" style="transform: translateX(5%);"><div class="ident-element ident-shape-circle" style="width: 163px; height: 163px;"><img src="https://i.ibb.co/twT5DYN5/rect9.png" alt="Logo de Negocio" style="object-fit: contain; padding: 5px;"></div></div><div class="zocalo-main" style="text-align: center; padding-top: 15px; padding-bottom: -15px" ><h2 style="font-size: 62px; font-family: 'Roboto Condensed', sans-serif; font-weight: undefined; font-style: undefined;">Carniceria Toro Blanco </h2><p class="slogan" style="font-size: 40px; font-family: 'Roboto Condensed', sans-serif; font-weight: undefined; font-style: undefined;">De Juan Gonzalez - 0981 999015</p></div><div class="zocalo-contact-bar"><p class="details"><i class="fa-solid fa-phone"></i> Cel.: 0981 999015</p><p class="details"><i class="fa-solid fa-location-dot"></i> Mercado N°4 Av. Pettirossi entre Rca. Francesa y Padre Levera</p></div><div class="social-bar horizontal "></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-negocio default" style="background-color: #003366; --primary-color: #003366; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="zocalo-section zocalo-ident" style="transform: translateX(5%);"><div class="ident-element ident-shape-square" style="width: 200px; height: 200px;"><img src="https://i.ibb.co/s9hGVDbv/g20.png" alt="Logo de Negocio" style="object-fit: contain; padding: 5px;"></div></div><div class="zocalo-main" style="text-align: center; padding-top: 33px; padding-bottom: -33px" ><h2 style="font-size: 35px; font-family: 'Poppins', sans-serif; font-weight: undefined; font-style: undefined;">Chispita Electricidad del Automovil</h2><p class="slogan" style="font-size: 24px; font-family: 'Poppins', sans-serif; font-weight: undefined; font-style: undefined;">Reparacion de Arranque y Alternador, Instalacion Completa, Control preventivo y Mantenimiento</p></div><div class="social-bar horizontal "></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-negocio bg-scanlines" style="background-color: #0d2a4b; --primary-color: #0d2a4b; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="zocalo-section zocalo-ident" style="transform: translateX(5%);"><div class="ident-element ident-shape-circle" style="width: 162px; height: 162px;"><img src="https://i.ibb.co/nMkFTFqp/7d67be78-9dac-40ca-94ff-89a93e87f785.png" alt="Logo de Negocio" style="object-fit: contain; padding: 5px;"></div></div><div class="zocalo-main" style="text-align: center; padding-top: 17px; padding-bottom: -17px" ><h2 style="font-size: 63px; font-family: 'Russo One', sans-serif; font-weight: 400; font-style: normal;">Zonia Boutique</h2><p class="slogan" style="font-size: 23px; font-family: 'Russo One', sans-serif; font-weight: 400; font-style: normal;">Estilo y moda para todos Prendas para damas, caballeros y niños</p></div><div class="zocalo-contact-bar"><p class="details"><i class="fa-solid fa-phone"></i> 0981 991 191 </p><p class="details"><i class="fa-solid fa-location-dot"></i> Villeta- Barrio San Jorge</p></div><div class="social-bar horizontal "></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-politico politico-classic default" style="background-color: #941e1e; --primary-color: #941e1e; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="color-bar"></div><div class="zocalo-section zocalo-ident" style="transform: translateX(22%);"><div class="ident-element ident-shape-circle" style="width: 166px; height: 166px;"><img src="https://i.ibb.co/ccnKMhgK/Whats-App-Image-2025-06-11-at-8-43-42-AM-1.jpg" style="width: 190%; height: 190%; object-fit: cover; position: absolute; top: 50%; left: 88%; transform: translate(-50%, -50%);" alt="Foto"></div></div><div class="zocalo-main" style="text-align: center; padding-top: 0px; padding-bottom: 0px" ><h2 style="font-size: 65px; font-family: 'Russo One', sans-serif; font-weight: 400; font-style: normal;">Rolando Nuñez</h2><p class="slogan" style="font-size: 40px; font-family: 'Russo One', sans-serif; font-weight: 400; font-style: normal;">Concejal Municipal</p></div><div class="star-container no-bg"><svg viewBox="0 0 51 48"><path fill="white" d="m25,1 6,17h18l-14,11 5,17-15-10-15,10 5-17-14-11h18z"/></svg></div><div class="social-bar horizontal "><span><i class="fab fa-whatsapp"></i>  </span><span><i class="fab fa-facebook"></i>  </span><span><i class="fab fa-instagram"></i>  </span></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-negocio default" style="background-color: #d35400; --primary-color: #d35400; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="zocalo-section zocalo-ident" style="transform: translateX(5%);"><div class="ident-element ident-shape-circle" style="width: 167px; height: 167px;"><img src="https://i.ibb.co/3mtgd2pw/Chat-GPT-Image-11-jun-2025-08-15-03-a-m.png" alt="Logo de Negocio" style="object-fit: contain; padding: 5px;"></div></div><div class="zocalo-main" style="text-align: center; padding-top: 0px; padding-bottom: 0px" ><h2 style="font-size: 56px; font-family: 'Russo One', sans-serif; font-weight: 400; font-style: normal;">GRINGO'S</h2><p class="slogan" style="font-size: 24px; font-family: 'Russo One', sans-serif; font-weight: 400; font-style: normal;">Las mas sabrosas Empanadas, Pollo, Carne, Choclo, Jamon y Queso y muchas mas..!!</p></div><div class="zocalo-contact-bar"><p class="details"><i class="fa-solid fa-phone"></i> 0992 341 048 - 0992 335 674</p><p class="details"><i class="fa-solid fa-location-dot"></i> 14 de Mayo Camino al Puerto</p></div><div class="social-bar horizontal "></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-politico politico-classic default" style="background-color: #0c4b33; --primary-color: #0c4b33; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="color-bar"></div><div class="zocalo-section zocalo-ident" style="transform: translateX(15%);"><div class="ident-element ident-shape-square" style="width: 160px; height: 160px;"><img src="https://i.ibb.co/3yKL49gr/Terere-1.jpg" style="width: 105%; height: 105%; object-fit: cover; position: absolute; top: 51%; left: 49%; transform: translate(-50%, -50%);" alt="Foto"></div></div><div class="zocalo-main" style="text-align: center; padding-top: -3px; padding-bottom: 3px" ><h2 style="font-size: 36px; font-family: 'Russo One', sans-serif; font-weight: 400; font-style: normal;">Venta de Remedios Naturales de Marlene Nuñez Para disfrutar de un rico tereré </h2><p class="slogan" style="font-size: 24px; font-family: 'Russo One', sans-serif; font-weight: 400; font-style: normal;">Frente a Sport Cemen</p></div><div class="social-bar horizontal "><span><i class="fab fa-whatsapp"></i>  </span><span><i class="fab fa-facebook"></i>  </span><span><i class="fab fa-instagram"></i>  </span></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-negocio default" style="background-color: #d35400; --primary-color: #d35400; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="zocalo-section zocalo-ident" style="transform: translateX(5%);"><div class="ident-element ident-shape-square" style="width: 200px; height: 200px;"><img src="https://i.ibb.co/mFNj4WN4/Whats-App-Image-2025-06-09-at-12-26-33-PM.jpg" alt="Logo de Negocio" style="object-fit: contain; padding: 5px;"></div></div><div class="zocalo-main" style="text-align: center; padding-top: 18px; padding-bottom: -18px" ><h2 style="font-size: 56px; font-family: 'Oswald', sans-serif; font-weight: 700; font-style: normal;">GRELHA BURGUER</h2><p class="slogan" style="font-size: 24px; font-family: 'Oswald', sans-serif; font-weight: 700; font-style: normal;">LAS MAS DELICIOSAS PIZZAS, HAMBURGUESAS Y LOMITOS DE VILLETA</p></div><div class="zocalo-contact-bar"><p class="details"><i class="fa-solid fa-phone"></i>  0971 66 12 49</p><p class="details"><i class="fa-solid fa-location-dot"></i> Lomas Valentinas c/ Mcal Lopez</p></div><div class="social-bar horizontal "></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-negocio default" style="background-color: #722f37; --primary-color: #722f37; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="zocalo-section zocalo-ident" style="transform: translateX(5%);"><div class="ident-element ident-shape-square" style="width: 200px; height: 200px;"><img src="https://i.ibb.co/S7t9ZFWk/Chat-GPT-Image-11-jun-2025-09-03-35-a-m.png" alt="Logo de Negocio" style="object-fit: contain; padding: 5px;"></div></div><div class="zocalo-main" style="text-align: center; padding-top: 18px; padding-bottom: -18px" ><h2 style="font-size: 56px; font-family: 'Oswald', sans-serif; font-weight: 400; font-style: normal;">Bodega Paco's de Ruben Torres</h2><p class="slogan" style="font-size: 30px; font-family: 'Oswald', sans-serif; font-weight: 400; font-style: normal;">Bebidas en gral, gaseosas, cervezas, whiskys y mucho más</p></div><div class="zocalo-contact-bar"><p class="details"><i class="fa-solid fa-location-dot"></i> Mcal Lopez c/ Alberdi  Villeta Py</p></div><div class="social-bar horizontal "></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-politico politico-classic bg-plexus" style="background-color: #2c3e50; --primary-color: #2c3e50; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="color-bar"></div><div class="zocalo-section zocalo-ident" style="transform: translateX(10%);"><div class="ident-element ident-shape-circle" style="width: 160px; height: 160px;"><img src="https://i.ibb.co/BKNqDBBd/Whats-App-Image-2025-06-09-at-12-52-51-PM.jpg" style="width: 143%; height: 143%; object-fit: cover; position: absolute; top: 47%; left: 43%; transform: translate(-50%, -50%);" alt="Foto"></div></div><div class="zocalo-main" style="text-align: center; padding-top: -4px; padding-bottom: 4px" ><h2 style="font-size: 44px; font-family: 'Russo One', sans-serif; font-weight: 400; font-style: normal;">Herreria Sandoval de Valentin Sandoval</h2><p class="slogan" style="font-size: 23px; font-family: 'Russo One', sans-serif; font-weight: 400; font-style: normal;">Tinglados, rejas, portones a control, gateras para caballeros  Contacto 0991 840 265</p></div><div class="social-bar horizontal hide-text"><span><i class="fab fa-whatsapp"></i>  </span><span><i class="fab fa-facebook"></i>  </span><span><i class="fab fa-instagram"></i>  </span></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-politico politico-classic default" style="background-color: #722f37; --primary-color: #722f37; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="color-bar"></div><div class="zocalo-section zocalo-ident" style="transform: translateX(10%);"><div class="ident-element ident-shape-square" style="width: 160px; height: 160px;"><img src="https://i.ibb.co/yB4k392M/Medicina-Veterinaria.webp" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 54%; left: 49%; transform: translate(-50%, -50%);" alt="Foto"></div></div><div class="zocalo-main" style="text-align: center; padding-top: -3px; padding-bottom: 3px" ><h2 style="font-size: 46px; font-family: 'Oswald', sans-serif; font-weight: 400; font-style: normal;">Clinica Veterinaria San Francisco</h2><p class="slogan" style="font-size: 34px; font-family: 'Oswald', sans-serif; font-weight: 400; font-style: normal;">Consultas, cirugias,vacunaciones,baños, A pasos del semáforo de Navarro 0986 515478</p></div><div class="social-bar horizontal hide-text"><span><i class="fab fa-whatsapp"></i>  </span><span><i class="fab fa-facebook"></i>  </span><span><i class="fab fa-instagram"></i>  </span></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-negocio default" style="background-color: #1a1a1a; --primary-color: #1a1a1a; --secondary-color: #bdc3c7; --secondary-color-trans: #bdc3c733;"><div class="zocalo-section zocalo-ident" style="transform: translateX(5%);"><div class="ident-element ident-shape-square" style="width: 174px; height: 174px;"><img src="https://i.ibb.co/xQ6Qb8J/Chat-GPT-Image-11-jun-2025-08-34-33-a-m.png" alt="Logo de Negocio" style="object-fit: contain; padding: 5px;"></div></div><div class="zocalo-main" style="text-align: center; padding-top: 24px; padding-bottom: -24px" ><h2 style="font-size: 59px; font-family: 'Russo One', sans-serif; font-weight: 400; font-style: normal;">r&m automotores</h2><p class="slogan" style="font-size: 36px; font-family: 'Russo One', sans-serif; font-weight: 400; font-style: normal;">Cel: 0986 826 873</p></div><div class="zocalo-contact-bar"><p class="details"><i class="fa-solid fa-location-dot"></i> Acceso sur y 29 de septiembre - Ñemby</p></div><div class="social-bar horizontal "></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-negocio default" style="background-color: #003366; --primary-color: #003366; --secondary-color: #ffffff; --secondary-color-trans: #ffffff33;"><div class="zocalo-section zocalo-ident" style="transform: translateX(5%);"><div class="ident-element ident-shape-square" style="width: 163px; height: 163px;"><img src="https://i.ibb.co/1YtMcwHM/Chat-GPT-Image-11-jun-2025-08-35-59-a-m.png" alt="Logo de Negocio" style="object-fit: contain; padding: 5px;"></div></div><div class="zocalo-main" style="text-align: center; padding-top: 12px; padding-bottom: -12px" ><h2 style="font-size: 44px; font-family: 'Russo One', sans-serif; font-weight: 400; font-style: normal;">JA Metalurgica de José Ayala</h2><p class="slogan" style="font-size: 29px; font-family: 'Russo One', sans-serif; font-weight: 400; font-style: normal;">Estructuras metalicas en gral, colocación de fachadas de vidrio y cielo razo</p></div><div class="zocalo-contact-bar"><p class="details"><i class="fa-solid fa-phone"></i> 0971 766 032</p><p class="details"><i class="fa-solid fa-location-dot"></i> Pa'i Ñu- Ñemby</p></div><div class="social-bar horizontal "><span><i class="fab fa-whatsapp"></i>  </span><span><i class="fab fa-facebook"></i>  </span><span><i class="fab fa-instagram"></i>  </span></div></div></div>
+<div class="zocalo-item"><div class="zocalo-base zocalo-politico politico-classic default" style="background-color: #0c4b33; --primary-color: #0c4b33; --secondary-color: #e6e6fa; --secondary-color-trans: #e6e6fa33;"><div class="color-bar"></div><div class="zocalo-section zocalo-ident" style="transform: translateX(10%);"><div class="ident-element ident-shape-square" style="width: 160px; height: 160px;"><img src="https://i.ibb.co/NgkJn4xy/Whats-App-Image-2025-06-10-at-8-57-49-PM.jpg" style="width: 300%; height: 300%; object-fit: cover; position: absolute; top: 98%; left: 37%; transform: translate(-50%, -50%);" alt="Foto"></div></div><div class="zocalo-main" style="text-align: center; padding-top: 0px; padding-bottom: 0px" ><h2 style="font-size: 45px; font-family: 'Oswald', sans-serif; font-weight: 400; font-style: normal;">Estudio Jurídico  Abg. Carlos Cesar Centurion Benitez</h2><p class="slogan" style="font-size: 38px; font-family: 'Oswald', sans-serif; font-weight: 400; font-style: normal;">0994 284 261 Lomas Valentinas c/ Ytororo</p></div><div class="social-bar vertical "><span><i class="fab fa-whatsapp"></i>  </span><span><i class="fab fa-facebook"></i>  </span><span><i class="fab fa-instagram"></i>  </span></div></div></div>
+</div>
+
+                <script id="zocalo-data-store" type="application/json">[
+  {
+    "id": "imported-1718102798934-0",
+    "line1": "REINALDO BENITEZ",
+    "name": "REINALDO BENITEZ",
+    "line2": "CONCEJAL MUNICIPAL-VILLETA",
+    "textAlign": "center",
+    "textY": 54,
+    "titleSize": 58,
+    "fontFamily": "'Poppins', sans-serif",
+    "subtitleSize": 31,
+    "primaryColor": "#003366",
+    "secondaryColor": "#ffffff",
+    "backgroundStyle": "default",
+    "socialLayout": "horizontal",
+    "showSocialText": false,
+    "whatsapp": "",
+    "facebook": "",
+    "instagram": "",
+    "type": "politico",
+    "template": "classic",
+    "identShape": "ident-shape-circle",
+    "identSize": 153,
+    "identX": 21,
+    "photoUrl": "https://i.ibb.co/pjRYtPvx/unnamed-14-removebg-preview.png",
+    "photoZoom": 156,
+    "photoY": -36,
+    "photoX": 0,
+    "showStar": true,
+    "starStyle": "no-bg",
+    "starIconUrl": ""
+  },
+  {
+    "id": "imported-1718102798934-1",
+    "line1": "HO Automotores",
+    "name": "HO Automores",
+    "line2": "Compra- venta consignación - 0981 102 654",
+    "textAlign": "center",
+    "textY": 69,
+    "titleSize": 69,
+    "fontFamily": "'Russo One', sans-serif",
+    "subtitleSize": 24,
+    "primaryColor": "#1a1a1a",
+    "secondaryColor": "#e74c3c",
+    "backgroundStyle": "bg-plexus",
+    "socialLayout": "horizontal",
+    "showSocialText": true,
+    "whatsapp": "",
+    "facebook": "",
+    "instagram": "",
+    "type": "negocio",
+    "template": "",
+    "identShape": "ident-shape-square",
+    "identSize": 158,
+    "identX": 5,
+    "iconUrl": "https://i.ibb.co/Xr5czbCL/g9.png",
+    "icon": "fa-info-circle",
+    "contact": "",
+    "address": "Ñemby, Py"
+  },
+  {
+    "id": "imported-1718102798934-2",
+    "line1": "Concejal Julio Gamarra",
+    "name": "Concejal Julio Gamarra",
+    "line2": "",
+    "textAlign": "left",
+    "textY": 31,
+    "titleSize": 56,
+    "fontFamily": "'Exo 2', sans-serif",
+    "subtitleSize": 24,
+    "primaryColor": "#941e1e",
+    "secondaryColor": "#ffffff",
+    "backgroundStyle": "default",
+    "socialLayout": "horizontal",
+    "showSocialText": true,
+    "whatsapp": "",
+    "facebook": "",
+    "instagram": "",
+    "type": "politico",
+    "template": "moderno",
+    "identShape": "ident-shape-square",
+    "identSize": 175,
+    "identX": 10,
+    "photoUrl": "https://i.ibb.co/TMzy1wSp/images-removebg-preview.png",
+    "photoZoom": 114,
+    "photoY": 0,
+    "photoX": -5,
+    "showStar": true,
+    "starStyle": "",
+    "starIconUrl": "https://i.ibb.co/m5pFrJfQ/klipartz-com.png"
+  },
+  {
+    "id": "imported-1718102798934-3",
+    "line1": "Concejal Carlos \"Tuky\" Chavez",
+    "name": "Concejal Carlos \"Tuky\" Chavez",
+    "line2": "",
+    "textAlign": "center",
+    "textY": 49,
+    "titleSize": 66,
+    "fontFamily": "'Exo 2', sans-serif",
+    "subtitleSize": 24,
+    "primaryColor": "#941e1e",
+    "secondaryColor": "#ffffff",
+    "backgroundStyle": "default",
+    "socialLayout": "horizontal",
+    "showSocialText": true,
+    "whatsapp": "",
+    "facebook": "",
+    "instagram": "",
+    "type": "politico",
+    "template": "classic",
+    "identShape": "ident-shape-circle",
+    "identSize": 149,
+    "identX": 44,
+    "photoUrl": "https://i.ibb.co/pjF07Zrh/unnamed-17-removebg-preview.png",
+    "photoZoom": 148,
+    "photoY": -35,
+    "photoX": -3,
+    "showStar": true,
+    "starStyle": "no-bg",
+    "starIconUrl": ""
+  },
+  {
+    "id": "imported-1718102798934-4",
+    "line1": "Concejal Eduardo \"Choto\" noguera",
+    "name": "Concejal Eduardo \"Choto\" noguera",
+    "line2": "",
+    "textAlign": "left",
+    "textY": 21,
+    "titleSize": 51,
+    "fontFamily": "'Syncopate', sans-serif",
+    "subtitleSize": 24,
+    "primaryColor": "#003366",
+    "secondaryColor": "#e6e6fa",
+    "backgroundStyle": "default",
+    "socialLayout": "horizontal",
+    "showSocialText": true,
+    "whatsapp": "",
+    "facebook": "",
+    "instagram": "",
+    "type": "politico",
+    "template": "moderno",
+    "identShape": "ident-shape-square",
+    "identSize": 160,
+    "identX": 10,
+    "photoUrl": "https://i.ibb.co/Q7kgCgQw/unnamed-16.jpg",
+    "photoZoom": 182,
+    "photoY": -39,
+    "photoX": 29,
+    "showStar": true,
+    "starStyle": "",
+    "starIconUrl": "https://i.ibb.co/qYQgbydY/51kf-Mhd2-T7-L-AC-UF894-1000-QL80.jpg"
+  },
+  {
+    "id": "imported-1718102798934-5",
+    "line1": "Alberto Baez",
+    "name": "Alberto Baez",
+    "line2": "Director del SNPP Filial Villeta",
+    "textAlign": "center",
+    "textY": 26,
+    "titleSize": 77,
+    "fontFamily": "'Exo 2', sans-serif",
+    "subtitleSize": 40,
+    "primaryColor": "#1a1a1a",
+    "secondaryColor": "#ffffff",
+    "backgroundStyle": "bg-scanlines",
+    "socialLayout": "horizontal",
+    "showSocialText": true,
+    "whatsapp": "",
+    "facebook": "",
+    "instagram": "",
+    "type": "politico",
+    "template": "moderno",
+    "identShape": "ident-shape-square",
+    "identSize": 154,
+    "identX": 0,
+    "photoUrl": "https://i.ibb.co/Xk629Q9b/unnamed-5-removebg-preview.png",
+    "photoZoom": 287,
+    "photoY": -38,
+    "photoX": -16,
+    "showStar": true,
+    "starStyle": "",
+    "starIconUrl": "https://i.ibb.co/hxdcs6hT/descargar.png"
+  },
+  {
+    "id": "imported-1718102798934-6",
+    "line1": "Carniceria Toro Blanco ",
+    "name": "Carniceria Toro Blanco ",
+    "line2": "De Juan Gonzalez - 0981 999015",
+    "textAlign": "center",
+    "textY": 65,
+    "titleSize": 62,
+    "fontFamily": "'Roboto Condensed', sans-serif",
+    "subtitleSize": 40,
+    "primaryColor": "#941e1e",
+    "secondaryColor": "#e6e6fa",
+    "backgroundStyle": "bg-scanlines",
+    "socialLayout": "horizontal",
+    "showSocialText": true,
+    "whatsapp": "",
+    "facebook": "",
+    "instagram": "",
+    "type": "negocio",
+    "template": "",
+    "identShape": "ident-shape-circle",
+    "identSize": 163,
+    "identX": 5,
+    "iconUrl": "https://i.ibb.co/twT5DYN5/rect9.png",
+    "icon": "fa-info-circle",
+    "contact": "Cel.: 0981 999015",
+    "address": "Mercado N°4 Av. Pettirossi entre Rca. Francesa y Padre Levera"
+  },
+  {
+    "id": "imported-1718102798934-7",
+    "line1": "Chispita Electricidad del Automovil",
+    "name": "Chispita Electricidad del Automovil",
+    "line2": "Reparacion de Arranque y Alternador, Instalacion Completa, Control preventivo y Mantenimiento",
+    "textAlign": "center",
+    "textY": 83,
+    "titleSize": 35,
+    "fontFamily": "'Poppins', sans-serif",
+    "subtitleSize": 24,
+    "primaryColor": "#003366",
+    "secondaryColor": "#ffffff",
+    "backgroundStyle": "default",
+    "socialLayout": "horizontal",
+    "showSocialText": true,
+    "whatsapp": "",
+    "facebook": "",
+    "instagram": "",
+    "type": "negocio",
+    "template": "",
+    "identShape": "ident-shape-square",
+    "identSize": 200,
+    "identX": 5,
+    "iconUrl": "https://i.ibb.co/s9hGVDbv/g20.png",
+    "icon": "fa-info-circle",
+    "contact": "",
+    "address": ""
+  },
+  {
+    "id": "new-1749640411104",
+    "name": "zonia boutique",
+    "type": "negocio",
+    "line1": "Zonia Boutique",
+    "line2": "Estilo y moda para todos Prendas para damas, caballeros y niños",
+    "contact": "0981 991 191 ",
+    "address": "Villeta- Barrio San Jorge",
+    "primaryColor": "#0d2a4b",
+    "secondaryColor": "#ffffff",
+    "fontFamily": "'Russo One', sans-serif",
+    "titleSize": 63,
+    "subtitleSize": 23,
+    "backgroundStyle": "bg-scanlines",
+    "whatsapp": "",
+    "facebook": "",
+    "instagram": "",
+    "socialLayout": "horizontal",
+    "showSocialText": true,
+    "textAlign": "center",
+    "identShape": "ident-shape-circle",
+    "identSize": 162,
+    "identX": 4,
+    "textY": 67,
+    "icon": "fa-info-circle",
+    "iconUrl": "https://i.ibb.co/nMkFTFqp/7d67be78-9dac-40ca-94ff-89a93e87f785.png",
+    "font": "'Russo One', sans-serif",
+    "fontWeight": "400",
+    "fontStyle": "normal"
+  },
+  {
+    "id": "new-1749642860921",
+    "name": "Rolando Nuñez",
+    "type": "politico",
+    "line1": "Rolando Nuñez",
+    "line2": "Concejal Municipal",
+    "contact": "",
+    "address": "",
+    "primaryColor": "#941e1e",
+    "secondaryColor": "#ffffff",
+    "fontFamily": "'Russo One', sans-serif",
+    "fontWeight": "400",
+    "fontStyle": "normal",
+    "titleSize": 65,
+    "subtitleSize": 40,
+    "backgroundStyle": "default",
+    "whatsapp": " ",
+    "facebook": " ",
+    "instagram": " ",
+    "socialLayout": "horizontal",
+    "showSocialText": true,
+    "textAlign": "center",
+    "identShape": "ident-shape-circle",
+    "identSize": 166,
+    "identX": 22,
+    "textY": 50,
+    "template": "classic",
+    "showStar": true,
+    "starIconUrl": "",
+    "photoUrl": "https://i.ibb.co/ccnKMhgK/Whats-App-Image-2025-06-11-at-8-43-42-AM-1.jpg",
+    "photoZoom": 190,
+    "photoX": -38,
+    "photoY": 0,
+    "starStyle": "no-bg",
+    "politicoTemplate": "classic"
+  },
+  {
+    "id": "new-1749643251522",
+    "name": "GRINGO'S",
+    "type": "negocio",
+    "line1": "GRINGO'S",
+    "line2": "Las mas sabrosas Empanadas, Pollo, Carne, Choclo, Jamon y Queso y muchas mas..!!",
+    "contact": "0992 341 048 - 0992 335 674",
+    "address": "14 de Mayo Camino al Puerto",
+    "primaryColor": "#d35400",
+    "secondaryColor": "#ffffff",
+    "fontFamily": "'Russo One', sans-serif",
+    "fontWeight": "400",
+    "fontStyle": "normal",
+    "titleSize": 56,
+    "subtitleSize": 24,
+    "backgroundStyle": "default",
+    "whatsapp": "",
+    "facebook": "",
+    "instagram": "",
+    "socialLayout": "horizontal",
+    "showSocialText": true,
+    "textAlign": "center",
+    "identShape": "ident-shape-circle",
+    "identSize": 167,
+    "identX": 0,
+    "textY": 50,
+    "icon": "fa-info-circle",
+    "iconUrl": "https://i.ibb.co/3mtgd2pw/Chat-GPT-Image-11-jun-2025-08-15-03-a-m.png"
+  },
+  {
+    "id": "new-1749644228869",
+    "name": "venta de remedios",
+    "type": "politico",
+    "line1": "Venta de Remedios Naturales de Marlene Nuñez Para disfrutar de un rico tereré ",
+    "line2": "Frente a Sport Cemen",
+    "contact": "",
+    "address": "",
+    "primaryColor": "#0c4b33",
+    "secondaryColor": "#ffffff",
+    "fontFamily": "'Russo One', sans-serif",
+    "fontWeight": "400",
+    "fontStyle": "normal",
+    "titleSize": 36,
+    "subtitleSize": 24,
+    "backgroundStyle": "default",
+    "whatsapp": " ",
+    "facebook": " ",
+    "instagram": " ",
+    "socialLayout": "horizontal",
+    "showSocialText": true,
+    "textAlign": "center",
+    "identShape": "ident-shape-square",
+    "identSize": 160,
+    "identX": 15,
+    "textY": 47,
+    "template": "classic",
+    "showStar": false,
+    "starIconUrl": "",
+    "photoUrl": "https://i.ibb.co/3yKL49gr/Terere-1.jpg",
+    "photoZoom": 105,
+    "photoX": 1,
+    "photoY": -1,
+    "starStyle": ""
+  },
+  {
+    "id": "new-1749644708072",
+    "name": "GRELHA",
+    "type": "negocio",
+    "line1": "GRELHA BURGUER",
+    "line2": "LAS MAS DELICIOSAS PIZZAS, HAMBURGUESAS Y LOMITOS DE VILLETA",
+    "contact": " 0971 66 12 49",
+    "address": "Lomas Valentinas c/ Mcal Lopez",
+    "primaryColor": "#d35400",
+    "secondaryColor": "#ffffff",
+    "fontFamily": "'Oswald', sans-serif",
+    "fontWeight": "700",
+    "fontStyle": "normal",
+    "titleSize": 56,
+    "subtitleSize": 24,
+    "backgroundStyle": "default",
+    "whatsapp": "",
+    "facebook": "",
+    "instagram": "",
+    "socialLayout": "horizontal",
+    "showSocialText": true,
+    "textAlign": "center",
+    "identShape": "ident-shape-square",
+    "identSize": 200,
+    "identX": 10,
+    "textY": 68,
+    "icon": "fa-info-circle",
+    "iconUrl": "https://i.ibb.co/mFNj4WN4/Whats-App-Image-2025-06-09-at-12-26-33-PM.jpg"
+  },
+  {
+    "id": "new-1749644975361",
+    "name": "Bodega Paco's",
+    "type": "negocio",
+    "line1": "Bodega Paco's de Ruben Torres",
+    "line2": "Bebidas en gral, gaseosas, cervezas, whiskys y mucho más",
+    "contact": "",
+    "address": "Mcal Lopez c/ Alberdi  Villeta Py",
+    "primaryColor": "#722f37",
+    "secondaryColor": "#ffffff",
+    "fontFamily": "'Oswald', sans-serif",
+    "fontWeight": "400",
+    "fontStyle": "normal",
+    "titleSize": 56,
+    "subtitleSize": 30,
+    "backgroundStyle": "default",
+    "whatsapp": "",
+    "facebook": "",
+    "instagram": "",
+    "socialLayout": "horizontal",
+    "showSocialText": true,
+    "textAlign": "center",
+    "identShape": "ident-shape-square",
+    "identSize": 200,
+    "identX": 10,
+    "textY": 68,
+    "icon": "fa-info-circle",
+    "iconUrl": "https://i.ibb.co/S7t9ZFWk/Chat-GPT-Image-11-jun-2025-09-03-35-a-m.png"
+  },
+  {
+    "id": "new-1749645322055",
+    "name": "Sandoval",
+    "type": "politico",
+    "line1": "Herreria Sandoval de Valentin Sandoval",
+    "line2": "Tinglados, rejas, portones a control, gateras para caballeros  Contacto 0991 840 265",
+    "contact": "",
+    "address": "",
+    "primaryColor": "#2c3e50",
+    "secondaryColor": "#ffffff",
+    "fontFamily": "'Russo One', sans-serif",
+    "fontWeight": "400",
+    "fontStyle": "normal",
+    "titleSize": 44,
+    "subtitleSize": 23,
+    "backgroundStyle": "bg-plexus",
+    "whatsapp": " ",
+    "facebook": " ",
+    "instagram": " ",
+    "socialLayout": "horizontal",
+    "showSocialText": false,
+    "textAlign": "center",
+    "identShape": "ident-shape-circle",
+    "identSize": 160,
+    "identX": 10,
+    "textY": 46,
+    "template": "classic",
+    "showStar": false,
+    "starIconUrl": "",
+    "photoUrl": "https://i.ibb.co/BKNqDBBd/Whats-App-Image-2025-06-09-at-12-52-51-PM.jpg",
+    "photoZoom": 143,
+    "photoX": 7,
+    "photoY": 3,
+    "starStyle": ""
+  },
+  {
+    "id": "new-1749645542796",
+    "name": "veterinaria",
+    "type": "politico",
+    "line1": "Clinica Veterinaria San Francisco",
+    "line2": "Consultas, cirugias,vacunaciones,baños, A pasos del semáforo de Navarro 0986 515478",
+    "contact": "",
+    "address": "",
+    "primaryColor": "#722f37",
+    "secondaryColor": "#ffffff",
+    "fontFamily": "'Oswald', sans-serif",
+    "fontWeight": "400",
+    "fontStyle": "normal",
+    "titleSize": 46,
+    "subtitleSize": 34,
+    "backgroundStyle": "default",
+    "whatsapp": " ",
+    "facebook": " ",
+    "instagram": " ",
+    "socialLayout": "horizontal",
+    "showSocialText": false,
+    "textAlign": "center",
+    "identShape": "ident-shape-square",
+    "identSize": 160,
+    "identX": 10,
+    "textY": 47,
+    "template": "classic",
+    "showStar": false,
+    "starIconUrl": "",
+    "photoUrl": "https://i.ibb.co/yB4k392M/Medicina-Veterinaria.webp",
+    "photoZoom": 100,
+    "photoX": 1,
+    "photoY": -4,
+    "starStyle": ""
+  },
+  {
+    "id": "new-1749645990651",
+    "name": "RyM",
+    "type": "negocio",
+    "line1": "r&m automotores",
+    "line2": "Cel: 0986 826 873",
+    "contact": "",
+    "address": "Acceso sur y 29 de septiembre - Ñemby",
+    "primaryColor": "#1a1a1a",
+    "secondaryColor": "#bdc3c7",
+    "fontFamily": "'Russo One', sans-serif",
+    "fontWeight": "400",
+    "fontStyle": "normal",
+    "titleSize": 59,
+    "subtitleSize": 36,
+    "backgroundStyle": "default",
+    "whatsapp": "",
+    "facebook": "",
+    "instagram": "",
+    "socialLayout": "horizontal",
+    "showSocialText": true,
+    "textAlign": "center",
+    "identShape": "ident-shape-square",
+    "identSize": 174,
+    "identX": 0,
+    "textY": 74,
+    "icon": "fa-info-circle",
+    "iconUrl": "https://i.ibb.co/xQ6Qb8J/Chat-GPT-Image-11-jun-2025-08-34-33-a-m.png"
+  },
+  {
+    "id": "new-1749646899171",
+    "name": "JA METALURGICA",
+    "type": "negocio",
+    "line1": "JA Metalurgica de José Ayala",
+    "line2": "Estructuras metalicas en gral, colocación de fachadas de vidrio y cielo razo",
+    "contact": "0971 766 032",
+    "address": "Pa'i Ñu- Ñemby",
+    "primaryColor": "#003366",
+    "secondaryColor": "#ffffff",
+    "fontFamily": "'Russo One', sans-serif",
+    "fontWeight": "400",
+    "fontStyle": "normal",
+    "titleSize": 44,
+    "subtitleSize": 29,
+    "backgroundStyle": "default",
+    "whatsapp": " ",
+    "facebook": " ",
+    "instagram": " ",
+    "socialLayout": "horizontal",
+    "showSocialText": true,
+    "textAlign": "center",
+    "identShape": "ident-shape-square",
+    "identSize": 163,
+    "identX": 10,
+    "textY": 62,
+    "icon": "fa-info-circle",
+    "iconUrl": "https://i.ibb.co/1YtMcwHM/Chat-GPT-Image-11-jun-2025-08-35-59-a-m.png"
+  },
+  {
+    "id": "new-1749647338136",
+    "name": "Estudio juridico",
+    "type": "politico",
+    "line1": "Estudio Jurídico  Abg. Carlos Cesar Centurion Benitez",
+    "line2": "0994 284 261 Lomas Valentinas c/ Ytororo",
+    "contact": "",
+    "address": "",
+    "primaryColor": "#0c4b33",
+    "secondaryColor": "#e6e6fa",
+    "fontFamily": "'Oswald', sans-serif",
+    "fontWeight": "400",
+    "fontStyle": "normal",
+    "titleSize": 45,
+    "subtitleSize": 38,
+    "backgroundStyle": "default",
+    "whatsapp": " ",
+    "facebook": " ",
+    "instagram": " ",
+    "socialLayout": "vertical",
+    "showSocialText": true,
+    "textAlign": "center",
+    "identShape": "ident-shape-square",
+    "identSize": 160,
+    "identX": 10,
+    "textY": 50,
+    "template": "classic",
+    "showStar": false,
+    "starIconUrl": "",
+    "photoUrl": "https://i.ibb.co/NgkJn4xy/Whats-App-Image-2025-06-10-at-8-57-49-PM.jpg",
+    "photoZoom": 300,
+    "photoX": 13,
+    "photoY": -48,
+    "starStyle": "",
+    "politicoTemplate": "moderno"
+  }
+]</script>
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        const tiempoEnPantalla = 8000;
+                        const tiempoTransicion = 600;
+                        const container = document.querySelector('.zocalo-container');
+                        let zocalos = Array.from(container.children);
+                        let currentIndex = 0;
+                        const animaciones = [ { in: 'anim-fade-in', out: 'anim-fade-out' }, { in: 'anim-slide-in', out: 'anim-slide-out' }];
+
+                        function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+                        function showNextZocalo() {
+                            if (zocalos.length === 0) return;
+                            if (currentIndex === 0) {
+                                zocalos = shuffle(Array.from(container.children));
+                                zocalos.forEach(el => container.appendChild(el));
+                            }
+                            
+                            const current = zocalos[currentIndex];
+                            const prev = zocalos[currentIndex === 0 ? zocalos.length - 1 : currentIndex - 1];
+                            const anim = animaciones[Math.floor(Math.random() * animaciones.length)];
+                            
+                            if (prev && prev !== current) { prev.className = 'zocalo-item ' + anim.out; }
+                            
+                            setTimeout(() => { 
+                                if(current) current.className = 'zocalo-item active ' + anim.in; 
+                            }, 300);
+
+                            currentIndex = (currentIndex + 1) % zocalos.length;
+                            setTimeout(showNextZocalo, tiempoEnPantalla + tiempoTransicion);
+                        }
+                        if(zocalos.length > 0) showNextZocalo();
+                    });
+                </script>
+            
+</body>
+</html>
